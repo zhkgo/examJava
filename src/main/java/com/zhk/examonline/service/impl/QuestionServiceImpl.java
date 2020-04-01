@@ -63,10 +63,8 @@ public class QuestionServiceImpl extends BaseServiceImpl<Question> implements Qu
         //题干、解析、选项等 插入
         TextContent infoTextContent = new TextContent();
         infoTextContent.setCreateTime(now);
-        System.out.println("here1=======================================");
         setQuestionInfoFromVM(infoTextContent, model);
         textContentService.insertByFilter(infoTextContent);
-        System.out.println("here2=======================================");
         Question question = new Question();
         question.setSubjectId(model.getSubjectId());
         question.setGradeLevel(gradeLevel);
@@ -79,7 +77,6 @@ public class QuestionServiceImpl extends BaseServiceImpl<Question> implements Qu
         question.setInfoTextContentId(infoTextContent.getId());
         question.setCreateUser(userId);
         question.setDeleted(false);
-        System.out.println("here3=======================================");
         System.out.println(question.getScore());
         questionMapper.insertSelective(question);
         return question;

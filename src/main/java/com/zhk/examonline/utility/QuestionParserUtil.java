@@ -24,6 +24,25 @@ public class QuestionParserUtil {
         questions = new ArrayList<QuestionEditRequestVM>();
         this.subjectMapper = subjectMapper;
     }
+    public String gapReplace(String text){
+        String left="<span class=\"gapfilling-span f581607a-671b-4288-9940-3170d393f6ee\">";
+        String right="</span>";
+        int flag=0;
+        StringBuffer sb=new StringBuffer();
+        for(int i=0;i<text.length();i++){
+            if(text.charAt(i)!='$'){
+                sb.append(text.charAt(i));
+            }else{
+                if(flag==0){
+                    sb.append(left);
+                }else{
+                    sb.append(right);
+                }
+                flag=1-flag;
+            }
+        }
+        return sb.toString();
+    }
 
     public QuestionEditRequestVM transTo(SingleChoice singleChoice) {
         QuestionEditRequestVM model = new QuestionEditRequestVM();
@@ -91,7 +110,7 @@ public class QuestionParserUtil {
                 items.add(vm);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("解析单选ing");
         }
         model.setItems(items);
         return model;
@@ -166,7 +185,7 @@ public class QuestionParserUtil {
                 items.add(vm);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("解析多选题ing");
         }
         model.setItems(items);
         return model;
@@ -202,14 +221,14 @@ public class QuestionParserUtil {
 
     public QuestionEditRequestVM transTo(GapFilling gapFilling) {
         QuestionEditRequestVM model = new QuestionEditRequestVM();
-        Subject subject = new Subject();
+        Subject subject = new Subject   ();
         subject.setLevelName(gapFilling.getGradeLevel());
         subject.setName(gapFilling.getSubjectId());
         subject = subjectMapper.getBySubject(subject);//补全subject
         model.setQuestionType(4);
         model.setGradeLevel(subject.getLevel());
         model.setSubjectId(subject.getId());
-        model.setTitle(gapFilling.getTitle());
+        model.setTitle(gapReplace(gapFilling.getTitle()));
         model.setAnalyze(gapFilling.getAnalyze());
         model.setDifficult(gapFilling.getDifficult());
         List<QuestionEditItemVM> items = new ArrayList<QuestionEditItemVM>();
@@ -272,7 +291,7 @@ public class QuestionParserUtil {
                 items.add(vm);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("解析填空题ing");
         }
         model.setScore(String.valueOf(items.size() * Float.parseFloat(gapFilling.getScore())));
         model.setItems(items);

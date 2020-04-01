@@ -36,7 +36,6 @@ public class UploadController extends BaseApiController {
     @RequestMapping("/image")
     @ResponseBody
     public RestResponse questionUploadAndReadExcel(HttpServletRequest request) {
-        System.out.println("here");
         MultipartHttpServletRequest multipartHttpServletRequest = (MultipartHttpServletRequest) request;
         MultipartFile multipartFile = multipartHttpServletRequest.getFile("file");
         long attachSize = multipartFile.getSize();
