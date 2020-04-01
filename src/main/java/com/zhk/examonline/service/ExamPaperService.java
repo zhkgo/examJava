@@ -4,6 +4,7 @@ import com.zhk.examonline.domain.ExamPaper;
 import com.zhk.examonline.domain.User;
 import com.zhk.examonline.viewmodel.admin.exam.ExamPaperEditRequestVM;
 import com.zhk.examonline.viewmodel.admin.exam.ExamPaperPageRequestVM;
+import com.zhk.examonline.viewmodel.admin.exampaper.ExamPaperRandomRequestVM;
 import com.zhk.examonline.viewmodel.student.dashboard.PaperFilter;
 import com.zhk.examonline.viewmodel.student.dashboard.PaperInfo;
 import com.zhk.examonline.viewmodel.student.exam.ExamPaperPageVM;
@@ -26,6 +27,6 @@ public interface ExamPaperService extends BaseService<ExamPaper> {
     List<PaperInfo> indexPaper(PaperFilter paperFilter);
 
     Integer selectAllCount();
-
+    ExamPaperEditRequestVM generateRandom(ExamPaperRandomRequestVM model) throws Exception;
     List<Integer> selectMothCount();
 }

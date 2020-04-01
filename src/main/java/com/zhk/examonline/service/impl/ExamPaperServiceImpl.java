@@ -5,9 +5,11 @@ import com.zhk.examonline.domain.Question;
 import com.zhk.examonline.domain.TextContent;
 import com.zhk.examonline.domain.User;
 import com.zhk.examonline.domain.enums.ExamPaperTypeEnum;
+import com.zhk.examonline.domain.enums.QuestionTypeEnum;
 import com.zhk.examonline.domain.exam.ExamPaperQuestionItemObject;
 import com.zhk.examonline.domain.exam.ExamPaperTitleItemObject;
 import com.zhk.examonline.domain.other.KeyValue;
+import com.zhk.examonline.domain.question.QuestionTypeClass;
 import com.zhk.examonline.repository.ExamPaperMapper;
 import com.zhk.examonline.repository.QuestionMapper;
 import com.zhk.examonline.service.ExamPaperService;
@@ -15,14 +17,13 @@ import com.zhk.examonline.service.QuestionService;
 import com.zhk.examonline.service.SubjectService;
 import com.zhk.examonline.service.TextContentService;
 import com.zhk.examonline.service.enums.ActionEnum;
-import com.zhk.examonline.utility.DateTimeUtil;
-import com.zhk.examonline.utility.JsonUtil;
-import com.zhk.examonline.utility.ModelMapperSingle;
-import com.zhk.examonline.utility.ExamUtil;
+import com.zhk.examonline.utility.*;
 import com.zhk.examonline.viewmodel.admin.exam.ExamPaperEditRequestVM;
 import com.zhk.examonline.viewmodel.admin.exam.ExamPaperPageRequestVM;
 import com.zhk.examonline.viewmodel.admin.exam.ExamPaperTitleItemVM;
+import com.zhk.examonline.viewmodel.admin.exampaper.ExamPaperRandomRequestVM;
 import com.zhk.examonline.viewmodel.admin.question.QuestionEditRequestVM;
+import com.zhk.examonline.viewmodel.admin.question.QuestionPageRequestVM;
 import com.zhk.examonline.viewmodel.student.dashboard.PaperFilter;
 import com.zhk.examonline.viewmodel.student.dashboard.PaperInfo;
 import com.zhk.examonline.viewmodel.student.exam.ExamPaperPageVM;
@@ -33,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -77,7 +79,6 @@ public class ExamPaperServiceImpl extends BaseServiceImpl<ExamPaper> implements 
         return PageHelper.startPage(requestVM.getPageIndex(), requestVM.getPageSize(), "id desc").doSelectPageInfo(() ->
                 examPaperMapper.studentPage(requestVM));
     }
-
 
     @Override
     @Transactional
@@ -153,6 +154,57 @@ public class ExamPaperServiceImpl extends BaseServiceImpl<ExamPaper> implements 
     public Integer selectAllCount() {
         return examPaperMapper.selectAllCount();
     }
+
+    @Override
+    public ExamPaperEditRequestVM generateRandom(ExamPaperRandomRequestVM model) throws Exception{
+        QuestionPageRequestVM questionPageRequestVM=new QuestionPageRequestVM();
+        ExamPaperEditRequestVM examPaperEditRequestVM=new ExamPaperEditRequestVM();
+        examPaperEditRequestVM.setSubjectId(model.getSubjectId());
+        examPaperEditRequestVM.setLevel(model.getLevel());
+        questionPageRequestVM.setSubjectId(model.getSubjectId());
+        questionPageRequestVM.setLevel(model.getLevel());
+        List<Question> questions=questionMapper.page(questionPageRequestVM);
+        List<QuestionTypeClass> questionTypeClasses=new ArrayList<QuestionTypeClass>();
+        questionTypeClasses.add(new QuestionTypeClass(1,questions));
+        questionTypeClasses.add(new QuestionTypeClass(2,questions));
+        questionTypeClasses.add(new QuestionTypeClass(3,questions));
+        questionTypeClasses.add(new QuestionTypeClass(4,questions));
+        questionTypeClasses.add(new QuestionTypeClass(5,questions));
+        if(questionTypeClasses.get(0).size()<model.getSingleChoice()){
+            throw new Exception("单选题要求数量超过库存");
+        }
+        if(questionTypeClasses.get(1).size()<model.getMultipleChoice()){
+            throw new Exception("多选题要求数量超过库存");
+        }
+        if(questionTypeClasses.get(2).size()<model.getTrueFalse()){
+            throw new Exception("判断题要求数量超过库存");
+        }
+        if(questionTypeClasses.get(3).size()<model.getGapFilling()){
+            throw new Exception("填空题要求数量超过库存");
+        }
+        if(questionTypeClasses.get(4).size()<model.getShortAnswer()){
+            throw new Exception("简答题要求数量超过库存");
+        }
+        questionTypeClasses.get(0).setQuestionList(RandomPick.<Question>randomPicker(questionTypeClasses.get(0).getQuestionList(),model.getSingleChoice()));
+        questionTypeClasses.get(1).setQuestionList(RandomPick.<Question>randomPicker(questionTypeClasses.get(1).getQuestionList(),model.getMultipleChoice()));
+        questionTypeClasses.get(2).setQuestionList(RandomPick.<Question>randomPicker(questionTypeClasses.get(2).getQuestionList(),model.getTrueFalse()));
+        questionTypeClasses.get(3).setQuestionList(RandomPick.<Question>randomPicker(questionTypeClasses.get(3).getQuestionList(),model.getGapFilling()));
+        questionTypeClasses.get(4).setQuestionList(RandomPick.<Question>randomPicker(questionTypeClasses.get(4).getQuestionList(),model.getShortAnswer()));
+        List<ExamPaperTitleItemVM> titleItems=questionTypeClasses.stream().map(i->{
+            if(i.size()==0)return null;
+            ExamPaperTitleItemVM vm=new ExamPaperTitleItemVM();
+            vm.setName(QuestionTypeEnum.fromCode(i.getQType()).getName());
+            List<QuestionEditRequestVM> questionItems=i.getQuestionList().stream().map(question->{
+                return questionService.getQuestionEditRequestVM(question);
+            }).collect(Collectors.toList());
+            vm.setQuestionItems(questionItems);
+            return vm;
+        }).collect(Collectors.toList());
+        titleItems.removeIf(e->e==null);
+        examPaperEditRequestVM.setTitleItems(titleItems);
+        return examPaperEditRequestVM;
+    }
+
 
     @Override
     public List<Integer> selectMothCount() {

@@ -10,6 +10,7 @@ import com.zhk.examonline.viewmodel.admin.exam.ExamPaperPageRequestVM;
 import com.zhk.examonline.viewmodel.admin.exam.ExamPaperEditRequestVM;
 import com.zhk.examonline.viewmodel.admin.exam.ExamResponseVM;
 import com.github.pagehelper.PageInfo;
+import com.zhk.examonline.viewmodel.admin.exampaper.ExamPaperRandomRequestVM;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,7 +55,18 @@ public class ExamPaperController extends BaseApiController {
         ExamPaperEditRequestVM newVM = examPaperService.examPaperToVM(examPaper.getId());
         return RestResponse.ok(newVM);
     }
-
+    @RequestMapping(value= "/random",method = RequestMethod.POST)
+    public RestResponse<ExamPaperEditRequestVM> edit(@RequestBody @Valid ExamPaperRandomRequestVM model){
+        ExamPaperEditRequestVM examPaperVM;
+        try {
+            examPaperVM = examPaperService.generateRandom(model);
+        }catch (Exception e){
+            if(e.getMessage()!=null)
+                e.printStackTrace();
+            return RestResponse.fail(303,e.getMessage());
+        }
+        return RestResponse.ok(examPaperVM);
+    }
     @RequestMapping(value = "/select/{id}", method = RequestMethod.POST)
     public RestResponse<ExamPaperEditRequestVM> select(@PathVariable Integer id) {
         ExamPaperEditRequestVM vm = examPaperService.examPaperToVM(id);
