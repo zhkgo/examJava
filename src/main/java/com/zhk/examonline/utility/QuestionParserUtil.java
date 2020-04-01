@@ -20,7 +20,6 @@ import java.util.concurrent.TransferQueue;
 public class QuestionParserUtil {
     List<QuestionEditRequestVM> questions;
     SubjectMapper subjectMapper;
-
     public QuestionParserUtil(SubjectMapper subjectMapper) {
         questions = new ArrayList<QuestionEditRequestVM>();
         this.subjectMapper = subjectMapper;
